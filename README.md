@@ -1,5 +1,17 @@
 # 🎬 StreamVault — Enterprise Video Streaming Platform
-### Scalable to 10 Million Concurrent Viewers | Azure Cloud Native | Angular + Spring Boot + PostgreSQL
+
+<div align="center">
+
+![StreamVault](https://img.shields.io/badge/StreamVault-Enterprise-blue?style=for-the-badge)
+![Scale](https://img.shields.io/badge/Scale-10M%20Concurrent%20Viewers-success?style=for-the-badge)
+![Cloud](https://img.shields.io/badge/Cloud-Microsoft%20Azure-0078D4?style=for-the-badge&logo=microsoft-azure)
+![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)
+
+**Cloud-Native · Microservices · 10 Million Concurrent Viewers · Enterprise-Grade**
+
+[Architecture](#-architecture-overview) · [Environments](#-environments) · [CI/CD](#-cicd-pipeline) · [Infra & DR](#-disaster-recovery) · [Monitoring](#-monitoring--observability) · [Testing](#-testing-strategy) · [Security](#-authentication--security) · [Getting Started](#-getting-started)
+
+</div>
 
 ---
 
@@ -9,29 +21,35 @@
 2. [Architecture Overview](#-architecture-overview)
 3. [High-Level Design (HLD)](#-high-level-design-hld)
 4. [Low-Level Design (LLD)](#-low-level-design-lld)
-5. [Azure Infrastructure](#-azure-infrastructure)
-6. [Database Design](#-database-design)
-7. [Authentication & SSO](#-authentication--sso)
-8. [RBAC & IAM Rules](#-rbac--iam-rules)
-9. [CI/CD Pipeline](#-cicd-pipeline)
-10. [Blue-Green Deployment](#-blue-green-deployment)
-11. [ArgoCD & GitOps](#-argocd--gitops)
-12. [Helm Charts](#-helm-charts)
-13. [Dynatrace Monitoring](#-dynatrace-monitoring)
-14. [Project Structure](#-project-structure)
-15. [Getting Started](#-getting-started)
-16. [Environment Variables](#-environment-variables)
-17. [API Documentation](#-api-documentation)
-18. [Contributing](#-contributing)
+5. [Environments](#-environments)
+6. [Azure Infrastructure](#-azure-infrastructure)
+7. [Database Design](#-database-design)
+8. [Authentication & Security](#-authentication--security)
+9. [RBAC & IAM Rules](#-rbac--iam-rules)
+10. [CI/CD Pipeline](#-cicd-pipeline)
+11. [Blue-Green Deployment](#-blue-green-deployment)
+12. [ArgoCD & GitOps](#-argocd--gitops)
+13. [Helm Charts](#-helm-charts)
+14. [Disaster Recovery (DR)](#-disaster-recovery)
+15. [Scalability](#-scalability)
+16. [Fault Tolerance](#-fault-tolerance)
+17. [Monitoring & Observability](#-monitoring--observability)
+18. [Testing Strategy](#-testing-strategy)
+19. [App Availability & SLA](#-app-availability--sla)
+20. [Project Structure](#-project-structure)
+21. [Getting Started](#-getting-started)
+22. [Environment Variables](#-environment-variables)
+23. [API Documentation](#-api-documentation)
+24. [Contributing](#-contributing)
 
 ---
 
 ## 🚀 Project Overview
 
-**StreamVault** is a cloud-native, enterprise-grade video streaming platform engineered to handle **10 million concurrent viewers**. Built on Microsoft Azure, it leverages modern microservices architecture, CDN-backed video delivery, real-time analytics, and enterprise-grade security.
+StreamVault is a **cloud-native, enterprise-grade video streaming platform** engineered to handle **10 million concurrent viewers**. Built on Microsoft Azure, it leverages modern microservices architecture, CDN-backed video delivery, real-time analytics, and enterprise-grade security.
 
 | Attribute | Details |
-|-----------|---------|
+|---|---|
 | **Scale Target** | 10 million concurrent viewers |
 | **Cloud Provider** | Microsoft Azure |
 | **Frontend** | Angular 17+ (SPA) |
@@ -99,16 +117,16 @@
 ### 1. Core Services
 
 | Service | Technology | Purpose |
-|---------|-----------|---------|
-| **API Gateway** | Azure API Management + NGINX Ingress | Rate limiting, routing, throttling |
-| **Auth Service** | Azure AD B2C + Spring Security | SSO, JWT, OAuth 2.0 |
-| **User Service** | Spring Boot | User profiles, subscriptions, preferences |
-| **Video Service** | Spring Boot | Video metadata, catalog, search |
-| **Streaming Service** | Spring Boot + Azure Media Services | HLS/DASH adaptive bitrate |
-| **Encoder Service** | Azure Media Services | Transcoding to multiple resolutions |
-| **Analytics Service** | Spring Boot + Azure Stream Analytics | Real-time viewing metrics |
-| **Notification Service** | Spring Boot + Azure Communication Services | Email, push, SMS |
-| **Recommendation Service** | Spring Boot + Azure ML | AI-powered content recommendations |
+|---|---|---|
+| API Gateway | Azure API Management + NGINX Ingress | Rate limiting, routing, throttling |
+| Auth Service | Azure AD B2C + Spring Security | SSO, JWT, OAuth 2.0 |
+| User Service | Spring Boot | User profiles, subscriptions, preferences |
+| Video Service | Spring Boot | Video metadata, catalog, search |
+| Streaming Service | Spring Boot + Azure Media Services | HLS/DASH adaptive bitrate |
+| Encoder Service | Azure Media Services | Transcoding to multiple resolutions |
+| Analytics Service | Spring Boot + Azure Stream Analytics | Real-time viewing metrics |
+| Notification Service | Spring Boot + Azure Communication Services | Email, push, SMS |
+| Recommendation Service | Spring Boot + Azure ML | AI-powered content recommendations |
 
 ### 2. Azure Networking Architecture
 
@@ -155,7 +173,7 @@ Layer 5: PostgreSQL            → Hot data (materialized views)
 **Redis Cache Namespaces:**
 
 | Key Pattern | Content | TTL |
-|------------|---------|-----|
+|---|---|---|
 | `session:{userId}` | User session token | 24h |
 | `video:meta:{videoId}` | Video metadata | 30 min |
 | `user:profile:{userId}` | User profile data | 15 min |
@@ -217,7 +235,7 @@ UserService {
 ### 3. Video Streaming — Adaptive Bitrate
 
 ```java
-// Streaming Token Generation (Azure Function trigger on stream request)
+// Streaming Token Generation
 StreamingToken {
   UUID videoId
   UUID userId
@@ -237,7 +255,7 @@ StreamingToken {
 ### 4. Azure Functions
 
 | Function Name | Trigger | Purpose |
-|--------------|---------|---------|
+|---|---|---|
 | `VideoEncoderFunction` | Blob trigger (upload) | Kick off encoding job |
 | `StreamTokenFunction` | HTTP trigger | Generate short-lived SAS streaming URL |
 | `WatchEventFunction` | Service Bus trigger | Process watch events → PostgreSQL |
@@ -246,92 +264,107 @@ StreamingToken {
 | `UsageMetricsFunction` | Timer trigger (5 min) | Aggregate viewer metrics to Redis |
 | `RecommendationRefreshFunction` | Timer trigger (daily) | Refresh ML recommendations |
 
-### 5. Azure App Configuration
+---
 
-All non-secret configuration is stored in **Azure App Configuration** with feature flags:
+## 🌍 Environments
+
+StreamVault operates across **five isolated environments** — Development, UAT, Staging (Pre-Prod), Production, and Disaster Recovery — each with dedicated Azure subscriptions and Kubernetes namespaces.
+
+### Environment Overview
+
+| Environment | Purpose | Azure Subscription | AKS Namespace | URL |
+|---|---|---|---|---|
+| **DEV** | Active development, feature integration | `StreamVault-Dev-Sub` | `development` | `https://dev.streamvault.internal` |
+| **UAT** | User acceptance testing, stakeholder sign-off | `StreamVault-UAT-Sub` | `uat` | `https://uat.streamvault.com` |
+| **STAGING** | Pre-production, load & regression testing | `StreamVault-Staging-Sub` | `staging` | `https://staging.streamvault.com` |
+| **PRODUCTION** | Live traffic, 10M concurrent users | `StreamVault-Prod-Sub` | `production` | `https://streamvault.com` |
+| **DR** | Disaster recovery, standby failover | `StreamVault-DR-Sub` | `dr-production` | `https://dr.streamvault.com` |
+
+### Environment Configuration Matrix
+
+| Config | DEV | UAT | STAGING | PROD | DR |
+|---|---|---|---|---|---|
+| AKS Node Count | 3–10 | 5–20 | 10–40 | 10–100 | 10–80 |
+| PostgreSQL SKU | General Purpose, 4 vCores | General Purpose, 8 vCores | Business Critical, 16 vCores | Business Critical, 32 vCores | Business Critical, 32 vCores |
+| Redis SKU | C2 Basic | C3 Standard | P2 Premium | P3 Premium | P3 Premium |
+| Replicas (backend) | 2 | 3 | 5 | 10–100 | 10–80 |
+| Auto-scaling | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Blue-Green Deploy | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Geo-Redundancy | ❌ | ❌ | ❌ | ✅ | ✅ |
+| CDN | ❌ | ✅ | ✅ | ✅ | ✅ |
+| WAF | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Dynatrace APM | Basic | Standard | Full | Full | Full |
+| Data Masking (PII) | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+### Environment Promotion Flow
 
 ```
-# Feature Flags
-feature.4k-streaming.enabled = true
-feature.recommendations.enabled = true
-feature.live-streaming.enabled = false    # Beta
-
-# App Settings
-app.video.max-upload-size-gb = 50
-app.streaming.token-ttl-hours = 4
-app.analytics.batch-size = 1000
-app.cache.video-meta-ttl-minutes = 30
-```
-
-Spring Boot integration:
-```yaml
-# bootstrap.yml
-spring:
-  cloud:
-    azure:
-      appconfiguration:
-        stores:
-          - connection-string: ${AZURE_APP_CONFIG_CONNECTION_STRING}
-            selects:
-              - key-filter: /streamvault/${spring.profiles.active}/*
-            monitoring:
-              enabled: true
-              refresh-interval: 30s
-```
-
-### 6. Azure Key Vault
-
-All secrets are stored in **Azure Key Vault** — never in environment variables or config files:
-
-| Secret Name | Description |
-|------------|-------------|
-| `postgres-connection-string` | Full JDBC connection string |
-| `redis-connection-string` | Redis primary connection key |
-| `aad-client-secret` | Azure AD B2C client secret |
-| `jwt-signing-key` | RS256 private key (PEM) |
-| `azure-storage-account-key` | Blob storage key |
-| `dynatrace-api-token` | Dynatrace API token |
-| `service-bus-connection-string` | Azure Service Bus key |
-
-Spring Boot integration:
-```yaml
-spring:
-  cloud:
-    azure:
-      keyvault:
-        secret:
-          property-source-enabled: true
-          endpoint: https://streamvault-kv.vault.azure.net/
+Feature Branch → [PR + CI Checks]
+      │
+      ▼
+    DEV ──────── (auto-deploy on merge to main)
+      │
+      │  Auto after DEV green
+      ▼
+    UAT ──────── (auto-deploy + stakeholder sign-off gate)
+      │
+      │  Manual approval (QA Lead + Product Owner)
+      ▼
+  STAGING ────── (load tests + regression + E2E)
+      │
+      │  Manual approval (2 approvers: Tech Lead + DevOps)
+      ▼
+PRODUCTION ───── (blue-green deploy + canary rollout)
+      │
+      │  Automated failover trigger / manual DR drill
+      ▼
+     DR  ──────── (warm standby, RTO 15 min, RPO 5 min)
 ```
 
 ---
 
 ## ☁️ Azure Infrastructure
 
-### Infrastructure as Code (Bicep/Terraform)
+### Infrastructure as Code (Terraform)
 
 ```
 infrastructure/
 ├── main.tf
 ├── variables.tf
 ├── outputs.tf
-├── modules/
-│   ├── networking/          # VNet, NSG, Private DNS
-│   ├── aks/                 # AKS cluster, node pools
-│   ├── database/            # PostgreSQL Flexible Server
-│   ├── cache/               # Azure Cache for Redis (Premium P3)
-│   ├── storage/             # Blob Storage, Azure CDN
-│   ├── security/            # Key Vault, Managed Identity
-│   ├── apim/                # API Management
-│   ├── functions/           # Azure Functions App Plan
-│   ├── monitoring/          # Log Analytics, App Insights
-│   └── frontdoor/           # Azure Front Door + WAF
+├── environments/
+│   ├── dev/
+│   │   ├── main.tf
+│   │   └── terraform.tfvars
+│   ├── uat/
+│   │   ├── main.tf
+│   │   └── terraform.tfvars
+│   ├── staging/
+│   │   ├── main.tf
+│   │   └── terraform.tfvars
+│   ├── production/
+│   │   ├── main.tf
+│   │   └── terraform.tfvars
+│   └── dr/
+│       ├── main.tf
+│       └── terraform.tfvars
+└── modules/
+    ├── networking/          # VNet, NSG, Private DNS
+    ├── aks/                 # AKS cluster, node pools
+    ├── database/            # PostgreSQL Flexible Server
+    ├── cache/               # Azure Cache for Redis
+    ├── storage/             # Blob Storage, Azure CDN
+    ├── security/            # Key Vault, Managed Identity
+    ├── apim/                # API Management
+    ├── functions/           # Azure Functions App Plan
+    ├── monitoring/          # Log Analytics, App Insights
+    └── frontdoor/           # Azure Front Door + WAF
 ```
 
 ### AKS Node Pools
 
 | Pool Name | VM SKU | Min | Max | Purpose |
-|-----------|--------|-----|-----|---------|
+|---|---|---|---|---|
 | `system` | Standard_D4s_v3 | 3 | 3 | System pods, CoreDNS |
 | `backend` | Standard_D8s_v3 | 5 | 50 | Spring Boot services |
 | `frontend` | Standard_D4s_v3 | 2 | 20 | Angular SSR (optional) |
@@ -340,7 +373,7 @@ infrastructure/
 ### Azure Services Summary
 
 | Service | SKU | Purpose |
-|---------|-----|---------|
+|---|---|---|
 | Azure Front Door | Premium | Global load balancer, WAF, CDN |
 | Azure Kubernetes Service | Standard (100 nodes max) | Container orchestration |
 | Azure Database for PostgreSQL | Business Critical, 32 vCores | Primary datastore |
@@ -357,6 +390,35 @@ infrastructure/
 | Azure Active Directory B2C | P2 | Identity & SSO |
 | Azure Monitor | Standard | Logs & metrics |
 
+### Azure App Configuration (Feature Flags)
+
+```yaml
+# Feature Flags (per environment)
+feature.4k-streaming.enabled    = true       # prod, staging
+feature.recommendations.enabled = true
+feature.live-streaming.enabled  = false      # Beta — dev only
+
+# App Settings
+app.video.max-upload-size-gb    = 50
+app.streaming.token-ttl-hours   = 4
+app.analytics.batch-size        = 1000
+app.cache.video-meta-ttl-minutes = 30
+```
+
+### Azure Key Vault (Secret Management)
+
+> ⚠️ **NEVER commit secrets to Git.** All secrets are managed exclusively through Azure Key Vault. Managed Identity on each pod is granted `Key Vault Secrets User` role at deploy time.
+
+| Secret Name | Description |
+|---|---|
+| `postgres-connection-string` | Full JDBC connection string |
+| `redis-connection-string` | Redis primary connection key |
+| `aad-client-secret` | Azure AD B2C client secret |
+| `jwt-signing-key` | RS256 private key (PEM) |
+| `azure-storage-account-key` | Blob storage key |
+| `dynatrace-api-token` | Dynatrace API token |
+| `service-bus-connection-string` | Azure Service Bus key |
+
 ---
 
 ## 🗄 Database Design
@@ -372,28 +434,16 @@ CREATE TABLE users (
     email               VARCHAR(255) UNIQUE NOT NULL,
     display_name        VARCHAR(100),
     avatar_url          TEXT,
-    subscription_tier   VARCHAR(20) DEFAULT 'FREE',        -- FREE|BASIC|PREMIUM|ENTERPRISE
-    oauth_provider      VARCHAR(30),                        -- AAD|GOOGLE|GITHUB
+    subscription_tier   VARCHAR(20) DEFAULT 'FREE',
+    oauth_provider      VARCHAR(30),
     external_id         VARCHAR(255),
     is_active           BOOLEAN DEFAULT TRUE,
     last_login_at       TIMESTAMPTZ,
     created_at          TIMESTAMPTZ DEFAULT now(),
     updated_at          TIMESTAMPTZ DEFAULT now()
 );
-CREATE INDEX idx_users_email         ON users(email);
-CREATE INDEX idx_users_external_id   ON users(external_id, oauth_provider);
-
-CREATE TABLE user_sessions (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID REFERENCES users(id) ON DELETE CASCADE,
-    refresh_token   TEXT,
-    device_info     JSONB,
-    ip_address      INET,
-    expires_at      TIMESTAMPTZ NOT NULL,
-    created_at      TIMESTAMPTZ DEFAULT now()
-);
-CREATE INDEX idx_sessions_user_id    ON user_sessions(user_id);
-CREATE INDEX idx_sessions_expires_at ON user_sessions(expires_at);
+CREATE INDEX idx_users_email       ON users(email);
+CREATE INDEX idx_users_external_id ON users(external_id, oauth_provider);
 
 -- ─────────────────────────────────────────
 --  VIDEO CATALOG
@@ -403,109 +453,46 @@ CREATE TABLE videos (
     title               VARCHAR(500) NOT NULL,
     description         TEXT,
     duration_seconds    INTEGER,
-    status              VARCHAR(30) DEFAULT 'PROCESSING',  -- PROCESSING|ACTIVE|INACTIVE|DELETED
-    visibility          VARCHAR(20) DEFAULT 'PUBLIC',      -- PUBLIC|PRIVATE|UNLISTED
+    status              VARCHAR(30) DEFAULT 'PROCESSING',
+    visibility          VARCHAR(20) DEFAULT 'PUBLIC',
     thumbnail_url       TEXT,
-    blob_path           TEXT,
     hls_manifest_url    TEXT,
     dash_manifest_url   TEXT,
-    resolutions         JSONB,      -- ["360p","480p","720p","1080p","4k"]
-    metadata            JSONB,      -- director, cast, tags, language, etc.
+    resolutions         JSONB,
+    metadata            JSONB,
     view_count          BIGINT DEFAULT 0,
-    like_count          INTEGER DEFAULT 0,
     published_at        TIMESTAMPTZ,
-    created_at          TIMESTAMPTZ DEFAULT now(),
-    updated_at          TIMESTAMPTZ DEFAULT now()
+    created_at          TIMESTAMPTZ DEFAULT now()
 );
-CREATE INDEX idx_videos_status       ON videos(status);
-CREATE INDEX idx_videos_published_at ON videos(published_at DESC);
-CREATE INDEX idx_videos_view_count   ON videos(view_count DESC);
-CREATE INDEX idx_videos_fts          ON videos USING gin(to_tsvector('english', title || ' ' || coalesce(description, '')));
-
-CREATE TABLE categories (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name        VARCHAR(100) UNIQUE NOT NULL,
-    slug        VARCHAR(100) UNIQUE NOT NULL,
-    parent_id   UUID REFERENCES categories(id)
-);
-
-CREATE TABLE video_categories (
-    video_id    UUID REFERENCES videos(id) ON DELETE CASCADE,
-    category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
-    PRIMARY KEY (video_id, category_id)
+CREATE INDEX idx_videos_fts ON videos USING gin(
+    to_tsvector('english', title || ' ' || coalesce(description, ''))
 );
 
 -- ─────────────────────────────────────────
---  STREAMING & ANALYTICS
+--  STREAMING & ANALYTICS (Partitioned)
 -- ─────────────────────────────────────────
 CREATE TABLE watch_events (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID REFERENCES users(id) ON DELETE SET NULL,
     video_id        UUID REFERENCES videos(id) ON DELETE CASCADE,
-    session_id      UUID,
-    watch_duration  INTEGER,    -- seconds watched
-    total_duration  INTEGER,    -- video total seconds
-    completion_pct  SMALLINT,   -- 0-100
+    watch_duration  INTEGER,
+    completion_pct  SMALLINT,
     quality         VARCHAR(10),
     device_type     VARCHAR(20),
     country_code    CHAR(2),
-    client_ip       INET,
-    started_at      TIMESTAMPTZ DEFAULT now(),
-    ended_at        TIMESTAMPTZ
+    started_at      TIMESTAMPTZ DEFAULT now()
 ) PARTITION BY RANGE (started_at);
 
 -- Monthly partitions (auto-create via pg_partman)
 CREATE TABLE watch_events_2025_01 PARTITION OF watch_events
     FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
 
-CREATE INDEX idx_watch_events_user_id  ON watch_events(user_id, started_at DESC);
-CREATE INDEX idx_watch_events_video_id ON watch_events(video_id, started_at DESC);
-
-CREATE TABLE stream_tokens (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID REFERENCES users(id) ON DELETE CASCADE,
-    video_id        UUID REFERENCES videos(id) ON DELETE CASCADE,
-    token_hash      VARCHAR(64) UNIQUE NOT NULL,
-    sas_url         TEXT NOT NULL,
-    expires_at      TIMESTAMPTZ NOT NULL,
-    created_at      TIMESTAMPTZ DEFAULT now()
-);
-CREATE INDEX idx_stream_tokens_hash       ON stream_tokens(token_hash);
-CREATE INDEX idx_stream_tokens_expires_at ON stream_tokens(expires_at);
-
--- ─────────────────────────────────────────
---  SUBSCRIPTIONS & BILLING
--- ─────────────────────────────────────────
-CREATE TABLE subscription_plans (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name            VARCHAR(50) UNIQUE NOT NULL,
-    tier            VARCHAR(20) NOT NULL,
-    price_monthly   NUMERIC(10,2),
-    max_streams     SMALLINT,
-    max_resolution  VARCHAR(10),
-    features        JSONB
-);
-
-CREATE TABLE user_subscriptions (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID REFERENCES users(id) ON DELETE CASCADE,
-    plan_id         UUID REFERENCES subscription_plans(id),
-    status          VARCHAR(20) DEFAULT 'ACTIVE',   -- ACTIVE|CANCELLED|EXPIRED|TRIAL
-    started_at      TIMESTAMPTZ DEFAULT now(),
-    expires_at      TIMESTAMPTZ,
-    payment_ref     VARCHAR(255)
-);
-CREATE INDEX idx_subscriptions_user_id   ON user_subscriptions(user_id, status);
-CREATE INDEX idx_subscriptions_expires   ON user_subscriptions(expires_at);
-
 -- ─────────────────────────────────────────
 --  MATERIALIZED VIEWS (refreshed every 5 min)
 -- ─────────────────────────────────────────
 CREATE MATERIALIZED VIEW mv_trending_videos AS
 SELECT
-    v.id,
-    v.title,
-    v.thumbnail_url,
+    v.id, v.title, v.thumbnail_url,
     COUNT(we.id)            AS watch_count_24h,
     SUM(we.watch_duration)  AS total_watch_seconds_24h
 FROM videos v
@@ -515,29 +502,27 @@ WHERE we.started_at > now() - INTERVAL '24 hours'
 GROUP BY v.id, v.title, v.thumbnail_url
 ORDER BY watch_count_24h DESC
 LIMIT 100;
-
 CREATE UNIQUE INDEX ON mv_trending_videos(id);
 ```
 
-### Database Connection Pooling (PgBouncer)
+### Connection Pooling (PgBouncer)
 
-```yaml
-# pgbouncer config (sidecar in AKS)
-pool_mode: transaction
-max_client_conn: 5000
-default_pool_size: 100
-min_pool_size: 10
-reserve_pool_size: 20
+```ini
+# pgbouncer sidecar in AKS
+pool_mode         = transaction
+max_client_conn   = 5000
+default_pool_size = 100
+min_pool_size     = 10
+reserve_pool_size = 20
 ```
 
 ---
 
-## 🔐 Authentication & SSO
+## 🔐 Authentication & Security
 
-### Azure AD B2C Integration (OIDC / SAML 2.0)
+### Azure AD B2C — SSO Flow (OIDC / SAML 2.0)
 
 ```
-SSO Flow:
 1. User clicks "Sign In" on Angular frontend
 2. Angular redirects to Azure AD B2C /authorize endpoint
 3. User authenticates via Identity Provider:
@@ -552,12 +537,12 @@ SSO Flow:
 8. User principal created / updated in PostgreSQL
 ```
 
-**Spring Security Configuration:**
+### Spring Security Configuration
+
 ```java
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -576,9 +561,9 @@ public class SecurityConfig {
 }
 ```
 
-**Angular Auth Guard:**
+### Angular Auth Guard (MSAL)
+
 ```typescript
-// auth.guard.ts — Uses MSAL Angular
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
   canActivate(): Observable<boolean> {
@@ -596,67 +581,48 @@ export class AuthGuard implements CanActivate {
 
 ### Application Roles (Azure AD App Roles)
 
-| Role | Description | Can Do |
-|------|-------------|--------|
+| Role | Description | Permissions |
+|---|---|---|
 | `ROLE_VIEWER` | Regular subscriber | Watch videos, manage own profile |
 | `ROLE_CONTENT_MANAGER` | Content team | Upload, edit, publish videos |
-| `ROLE_ANALYST` | Analytics team | Read-only access to dashboards & metrics |
-| `ROLE_DEVELOPER` | Engineering team | Access to logs, trace data, non-prod envs |
-| `ROLE_DEVOPS` | DevOps engineer | AKS, pipeline, infra access (non-prod) |
+| `ROLE_ANALYST` | Analytics team | Read-only dashboards & metrics |
+| `ROLE_DEVELOPER` | Engineering | Logs, trace, non-prod envs |
+| `ROLE_DEVOPS` | DevOps engineer | AKS, pipeline, infra (non-prod) |
 | `ROLE_DEVOPS_PROD` | Senior DevOps | Production deployment approval |
-| `ROLE_TESTER` | QA team | Test environments, test data management |
+| `ROLE_TESTER` | QA team | Test environments & test data |
 | `ROLE_ADMIN` | Platform admin | Full system access |
 
 ### Azure IAM Role Assignments
 
-```
+```yaml
 # Developers
-Subscription: StreamVault-Dev-Sub
-  - Role: Contributor
-  - Scope: /subscriptions/{dev-sub-id}
+StreamVault-Dev-Sub:   Contributor (full dev access)
+StreamVault-Prod-Sub:  Reader      (read-only prod)
+StreamVault-UAT-Sub:   Contributor (full UAT access)
+AKS Production:        Azure Kubernetes Service Cluster User Role
 
-Subscription: StreamVault-Prod-Sub
-  - Role: Reader
-  - Scope: /subscriptions/{prod-sub-id}
-  
-AKS Cluster (Production):
-  - Role: Azure Kubernetes Service Cluster User Role
-  - Scope: /subscriptions/{prod}/resourceGroups/rg-streamvault-prod/providers/Microsoft.ContainerService/managedClusters/aks-streamvault-prod
-
-# DevOps Engineers  
-Subscription: StreamVault-Dev-Sub
-  - Role: Owner
-  - Scope: /subscriptions/{dev-sub-id}
-
-Subscription: StreamVault-Prod-Sub
-  - Role: Contributor (minus role assignment)
-  - Scope: /subscriptions/{prod-sub-id}
-  
-Key Vault (Production):
-  - Role: Key Vault Secrets User (read only)
-  - Scope: /subscriptions/{prod}/resourceGroups/.../vaults/streamvault-kv
+# DevOps Engineers
+StreamVault-Dev-Sub:     Owner
+StreamVault-UAT-Sub:     Owner
+StreamVault-Staging-Sub: Contributor
+StreamVault-Prod-Sub:    Contributor (minus role assignment)
+StreamVault-DR-Sub:      Contributor
+Key Vault (Prod):        Key Vault Secrets User (read-only)
 
 # Testers
-Subscription: StreamVault-Dev-Sub
-  - Role: Contributor
-  - Scope: /subscriptions/{dev-sub-id}/resourceGroups/rg-streamvault-test
+StreamVault-Dev-Sub: Contributor (rg-streamvault-test scope only)
+StreamVault-UAT-Sub: Contributor (rg-streamvault-uat scope only)
 
 # CI/CD Service Principal
-Subscription: Both
-  - Role: Contributor
-  - Scope: Resource Group level (not subscription)
-  
-AKS:
-  - Role: Azure Kubernetes Service RBAC Writer
-  
-ACR:
-  - Role: AcrPush
+All Subscriptions: Contributor (Resource Group level)
+AKS:               Azure Kubernetes Service RBAC Writer
+ACR:               AcrPush
 ```
 
 ### Kubernetes RBAC
 
 ```yaml
-# Developer ClusterRole — read-only prod, full dev
+# Developer — read-only prod, full dev/uat
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -672,8 +638,7 @@ rules:
     resources: ["pods/log"]
     verbs: ["get", "list"]
 ---
-# DevOps ClusterRole — full prod access
-apiVersion: rbac.authorization.k8s.io/v1
+# DevOps — full access all envs
 kind: ClusterRole
 metadata:
   name: devops-role
@@ -682,11 +647,10 @@ rules:
     resources: ["*"]
     verbs: ["*"]
 ---
-# Tester Role — test namespace only
-apiVersion: rbac.authorization.k8s.io/v1
+# Tester — test & UAT namespace only
 kind: Role
 metadata:
-  namespace: test
+  namespace: uat
   name: tester-role
 rules:
   - apiGroups: [""]
@@ -701,60 +665,81 @@ rules:
 
 ## 🔄 CI/CD Pipeline
 
-### Azure DevOps Pipeline (Full Flow)
+### Full Pipeline Flow (All Environments)
 
 ```
 Developer Push → Feature Branch
        │
        ▼
-┌─────────────────────────────────────────────────────────┐
-│  PR Validation Pipeline (azure-pipelines-pr.yml)         │
-│  ├── Lint (ESLint / Checkstyle)                          │
-│  ├── Unit Tests (Jest / JUnit)                           │
-│  ├── Code Coverage Gate (≥80%)                           │
-│  ├── SAST Scan (SonarQube)                               │
-│  ├── Dependency Vulnerability Scan (OWASP, Snyk)         │
-│  └── Build Validation (no merge if fail)                 │
-└─────────────────────────────────────────────────────────┘
-       │ PR Approved & Merged to main
+┌─────────────────────────────────────────────────────────────────┐
+│  PR Validation Pipeline (azure-pipelines-pr.yml)                │
+│  ├── Lint (ESLint / Checkstyle)                                  │
+│  ├── Unit Tests (Jest / JUnit) + Coverage Gate (≥80%)           │
+│  ├── SAST Scan (SonarQube — Quality Gate must pass)             │
+│  ├── Dependency Vulnerability Scan (OWASP, Snyk)                │
+│  └── Build Validation (no merge if fail)                        │
+└─────────────────────────────────────────────────────────────────┘
+       │ PR Approved → Merge to main
        ▼
-┌─────────────────────────────────────────────────────────┐
-│  Main CI Pipeline (azure-pipelines.yml)                  │
-│  Stage 1: BUILD                                          │
-│  ├── Angular: npm ci → ng build --configuration=prod     │
-│  ├── Spring Boot: mvn clean package -DskipTests          │
-│  ├── Docker Build (multi-stage Dockerfile)               │
-│  ├── Docker Push → Azure Container Registry (ACR)        │
-│  └── Tag: {service}-{branch}-{commit_sha}                │
-│                                                          │
-│  Stage 2: TEST                                           │
-│  ├── Unit Tests + Coverage Report                        │
-│  ├── Integration Tests (Testcontainers + PostgreSQL)     │
-│  ├── Contract Tests (Spring Cloud Contract)              │
-│  └── Performance Smoke Tests (k6)                        │
-│                                                          │
-│  Stage 3: SECURITY SCAN                                  │
-│  ├── Container Image Scan (Trivy)                        │
-│  ├── DAST Scan (OWASP ZAP)                               │
-│  └── Secret Detection (GitGuardian)                      │
-│                                                          │
-│  Stage 4: DEPLOY → DEV                                   │
-│  ├── Update Helm values (image tag)                      │
-│  ├── Commit to GitOps repo                               │
-│  └── ArgoCD auto-syncs dev namespace                     │
-│                                                          │
-│  Stage 5: DEPLOY → STAGING                               │
-│  ├── Approval gate (auto for staging)                    │
-│  ├── E2E Tests (Playwright/Cypress)                      │
-│  ├── Load Tests (k6 — 1000 VUs)                          │
-│  └── ArgoCD syncs staging namespace                      │
-│                                                          │
-│  Stage 6: DEPLOY → PRODUCTION                            │
-│  ├── Manual approval gate (2 approvers)                  │
-│  ├── Blue-Green switch                                   │
-│  └── ArgoCD syncs production namespace                   │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  Stage 1: BUILD                                                  │
+│  ├── Angular: npm ci → ng build --configuration=prod            │
+│  ├── Spring Boot: mvn clean package -DskipTests                 │
+│  ├── Docker multi-stage build → push to Azure Container Registry│
+│  └── Tag: {service}-{branch}-{commit_sha}                       │
+├─────────────────────────────────────────────────────────────────┤
+│  Stage 2: TEST                                                   │
+│  ├── Unit Tests + Coverage Report (JUnit / Jest)                │
+│  ├── Integration Tests (Testcontainers + PostgreSQL)            │
+│  ├── Contract Tests (Spring Cloud Contract)                      │
+│  ├── Performance Smoke Tests (k6 — 50 VUs, 2 min)              │
+│  ├── NFT — Non-Functional Tests (SLAs, memory, latency)         │
+│  └── Regression Test Suite                                       │
+├─────────────────────────────────────────────────────────────────┤
+│  Stage 3: SECURITY SCAN                                          │
+│  ├── SAST: SonarQube full analysis + Quality Gate               │
+│  ├── DAST: OWASP ZAP scan (automated against dev endpoint)      │
+│  ├── Container Image Scan: Trivy (fail on CRITICAL/HIGH)        │
+│  └── Secret Detection: GitGuardian                              │
+├─────────────────────────────────────────────────────────────────┤
+│  Stage 4: DEPLOY → DEV (auto on main merge)                     │
+│  ├── Update GitOps repo image tag                               │
+│  └── ArgoCD auto-syncs → development namespace                  │
+├─────────────────────────────────────────────────────────────────┤
+│  Stage 5: DEPLOY → UAT                                           │
+│  ├── Auto-deploy after DEV is green (30 min soak)               │
+│  ├── Smoke tests against UAT endpoint                           │
+│  ├── Full regression suite                                       │
+│  ├── DAST scan against UAT                                      │
+│  └── Stakeholder sign-off gate (Product Owner approval)         │
+├─────────────────────────────────────────────────────────────────┤
+│  Stage 6: DEPLOY → STAGING                                       │
+│  ├── Manual approval gate (QA Lead + DevOps)                    │
+│  ├── Full E2E Tests (Playwright/Cypress)                        │
+│  ├── Load Tests (k6 — 5,000 VUs, 30 min sustained)             │
+│  ├── NFT Tests (throughput, latency p99, error rate SLAs)       │
+│  ├── Performance baseline comparison (vs last release)          │
+│  └── ArgoCD syncs staging namespace                             │
+├─────────────────────────────────────────────────────────────────┤
+│  Stage 7: DEPLOY → PRODUCTION                                    │
+│  ├── Manual approval gate (2 approvers: Tech Lead + DevOps Lead)│
+│  ├── Blue-Green deploy → green slot                             │
+│  ├── Canary: 5% → 25% → 50% → 100% traffic shift              │
+│  ├── Automated Dynatrace SLO monitoring during rollout          │
+│  ├── Auto-rollback on SLO breach                                │
+│  └── ArgoCD syncs production namespace                          │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+### Environment-Specific Pipeline Triggers
+
+| Environment | Trigger | Approval | Auto-Rollback |
+|---|---|---|---|
+| **DEV** | Auto on merge to `main` | None | ✅ on health check fail |
+| **UAT** | Auto after DEV green + 30 min soak | Product Owner | ✅ on smoke test fail |
+| **STAGING** | Manual trigger | QA Lead + DevOps | ✅ on load test fail |
+| **PRODUCTION** | Manual trigger | Tech Lead + DevOps Lead (2 approvals) | ✅ on SLO breach |
+| **DR** | Manual trigger / Automated failover | DR Lead | ✅ on health check fail |
 
 ### azure-pipelines.yml (Excerpt)
 
@@ -764,10 +749,10 @@ trigger:
     include: [main, release/*]
 
 variables:
-  ACR_NAME: streamvaultacr
-  AKS_CLUSTER: aks-streamvault-prod
+  ACR_NAME:       streamvaultacr
+  AKS_CLUSTER:    aks-streamvault-prod
   RESOURCE_GROUP: rg-streamvault-prod
-  IMAGE_TAG: $(Build.SourceBranchName)-$(Build.SourceVersion)
+  IMAGE_TAG:      $(Build.SourceBranchName)-$(Build.SourceVersion)
 
 stages:
   - stage: Build
@@ -780,7 +765,6 @@ stages:
             inputs:
               versionSpec: '21'
           - script: mvn clean package -DskipTests --batch-mode
-            displayName: 'Maven Build'
           - task: Docker@2
             inputs:
               containerRegistry: acr-service-connection
@@ -788,48 +772,60 @@ stages:
               command: buildAndPush
               tags: $(IMAGE_TAG)
 
-      - job: BuildFrontend
-        pool:
-          vmImage: ubuntu-22.04
-        steps:
-          - task: NodeTool@0
-            inputs:
-              versionSpec: '20.x'
-          - script: |
-              npm ci
-              npx ng build --configuration=production
-            displayName: 'Angular Build'
-          - task: Docker@2
-            inputs:
-              containerRegistry: acr-service-connection
-              repository: streamvault/frontend
-              command: buildAndPush
-              tags: $(IMAGE_TAG)
-
-  - stage: Test
+  - stage: SecurityScan
     dependsOn: Build
     jobs:
-      - job: IntegrationTests
+      - job: SAST
         steps:
-          - script: mvn verify -Pintegration-tests
-            displayName: 'Integration Tests (Testcontainers)'
+          - task: SonarQubePrepare@5
+          - script: mvn verify sonar:sonar
+          - task: SonarQubePublish@5
+            inputs:
+              pollingTimeoutSec: '300'
+      - job: ContainerScan
+        steps:
+          - script: |
+              trivy image --exit-code 1 \
+                --severity CRITICAL,HIGH \
+                $(ACR_NAME).azurecr.io/streamvault/backend:$(IMAGE_TAG)
+      - job: DAST
+        steps:
+          - script: |
+              docker run -t owasp/zap2docker-stable zap-baseline.py \
+                -t https://dev.streamvault.internal/api \
+                -r zap_report.html
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: zap_report.html
+              artifactName: dast-report
 
-  - stage: DeployDev
-    dependsOn: Test
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  - stage: DeployUAT
+    dependsOn: [Test, SecurityScan]
+    condition: succeeded()
     jobs:
-      - deployment: DeployToDev
-        environment: development
+      - deployment: DeployToUAT
+        environment: uat
         strategy:
           runOnce:
             deploy:
               steps:
                 - script: |
-                    cd gitops-repo/environments/dev
+                    cd gitops-repo/environments/uat
                     sed -i "s/tag:.*/tag: $(IMAGE_TAG)/" values.yaml
-                    git commit -am "chore: update image tag to $(IMAGE_TAG)"
+                    git commit -am "chore: deploy $(IMAGE_TAG) to uat"
                     git push
-                  displayName: 'Update GitOps Repo (ArgoCD picks up)'
+
+  - stage: DeployProduction
+    dependsOn: DeployStaging
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToProduction
+        environment: production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: ./scripts/blue-green-switch.sh $(IMAGE_TAG)
 ```
 
 ---
@@ -849,33 +845,33 @@ Production Traffic (100%)
  Blue Env   Green Env
 (current)  (new version)
     │         │
- Active    Standby (smoke tested)
+ Active    Standby → smoke tested → traffic shifted
 ```
 
-### Switching Traffic
+### Traffic Switching Script
 
 ```bash
 # Step 1: Deploy new version to green slot
 kubectl apply -f k8s/green/deployment.yaml --namespace=production-green
 
-# Step 2: Run smoke tests against green
+# Step 2: Smoke test green slot
 ./scripts/smoke-test.sh https://green.streamvault.internal
 
-# Step 3: Switch Front Door origin to green (zero downtime)
-az afd origin update \
-  --resource-group rg-streamvault-prod \
-  --profile-name streamvault-fd \
-  --origin-group-name backend-origins \
-  --origin-name blue-origin \
-  --weight 0
+# Step 3: Canary — shift 5% of traffic to green
+az afd origin update --origin-name green-origin --weight 50
+az afd origin update --origin-name blue-origin  --weight 950
 
-az afd origin update \
-  --origin-name green-origin \
-  --weight 1000
+# Step 4: Monitor Dynatrace SLOs for 5 minutes
+sleep 300 && ./scripts/check-slos.sh || ./scripts/rollback.sh
 
-# Step 4: Monitor for 15 minutes (Dynatrace auto-alert)
-# Step 5: If healthy — decommission blue
-# Step 5: If issues — instant rollback (re-weight blue to 1000)
+# Step 5: Shift 25% → 50% → 100%
+az afd origin update --origin-name green-origin --weight 250
+sleep 300
+
+az afd origin update --origin-name green-origin --weight 1000
+az afd origin update --origin-name blue-origin  --weight 0
+
+# Step 6: Decommission blue (keep for 1 hour for instant rollback)
 ```
 
 ### Helm Blue-Green Values
@@ -887,9 +883,6 @@ deployment:
   replicaCount: 20
   image:
     tag: "v2.1.0"
-  service:
-    selector:
-      slot: blue
 
 # values-green.yaml
 deployment:
@@ -897,9 +890,6 @@ deployment:
   replicaCount: 20
   image:
     tag: "v2.2.0"
-  service:
-    selector:
-      slot: green
 ```
 
 ---
@@ -911,28 +901,33 @@ deployment:
 ```
 gitops-repo/
 ├── applications/
-│   ├── backend.yaml         # ArgoCD Application CRD
+│   ├── backend.yaml
 │   ├── frontend.yaml
 │   └── functions.yaml
 ├── environments/
 │   ├── dev/
 │   │   ├── values.yaml
 │   │   └── kustomization.yaml
+│   ├── uat/
+│   │   ├── values.yaml
+│   │   └── kustomization.yaml
 │   ├── staging/
 │   │   ├── values.yaml
 │   │   └── kustomization.yaml
-│   └── production/
-│       ├── values-blue.yaml
-│       ├── values-green.yaml
+│   ├── production/
+│   │   ├── values-blue.yaml
+│   │   ├── values-green.yaml
+│   │   └── kustomization.yaml
+│   └── dr/
+│       ├── values.yaml
 │       └── kustomization.yaml
 └── base/
-    └── streamvault/         # Helm charts base
+    └── streamvault/
 ```
 
 ### ArgoCD Application CRD
 
 ```yaml
-# applications/backend.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -968,26 +963,24 @@ spec:
 
 ### ArgoCD RBAC
 
-```yaml
-# argocd-rbac-cm configmap
-policy.csv: |
-  # Developers — read-only on prod, full on dev
-  p, role:developer, applications, get,    dev/*, allow
-  p, role:developer, applications, sync,   dev/*, allow
-  p, role:developer, applications, get,    production/*, allow
-  p, role:developer, applications, sync,   production/*, deny
+```ini
+# argocd-rbac-cm
+p, role:developer, applications, get,  dev/*, allow
+p, role:developer, applications, sync, dev/*, allow
+p, role:developer, applications, get,  uat/*, allow
+p, role:developer, applications, get,  production/*, allow
+p, role:developer, applications, sync, production/*, deny
 
-  # DevOps — full access all envs
-  p, role:devops, applications, *,         */*, allow
-  p, role:devops, clusters,     get,       *,   allow
+p, role:devops, applications, *, */*, allow
+p, role:devops, clusters,     get, *, allow
 
-  # Testers — sync dev and staging only
-  p, role:tester, applications, get,       dev/*, allow
-  p, role:tester, applications, get,       staging/*, allow
+p, role:tester, applications, get,  dev/*, allow
+p, role:tester, applications, get,  uat/*, allow
+p, role:tester, applications, sync, uat/*, allow
 
-  g, devops-group,    role:devops
-  g, developer-group, role:developer
-  g, tester-group,    role:tester
+g, devops-group,    role:devops
+g, developer-group, role:developer
+g, tester-group,    role:tester
 ```
 
 ---
@@ -1002,19 +995,19 @@ charts/
     ├── Chart.yaml
     ├── values.yaml
     ├── values-dev.yaml
+    ├── values-uat.yaml
     ├── values-staging.yaml
     ├── values-prod.yaml
+    ├── values-dr.yaml
     └── templates/
-        ├── _helpers.tpl
         ├── deployment.yaml
         ├── service.yaml
         ├── ingress.yaml
-        ├── hpa.yaml                  # Horizontal Pod Autoscaler
-        ├── pdb.yaml                  # Pod Disruption Budget
+        ├── hpa.yaml           # Horizontal Pod Autoscaler
+        ├── pdb.yaml           # Pod Disruption Budget
         ├── configmap.yaml
-        ├── serviceaccount.yaml
         ├── networkpolicy.yaml
-        └── NOTES.txt
+        └── serviceaccount.yaml
 ```
 
 ### values.yaml (Excerpt)
@@ -1027,9 +1020,6 @@ global:
 
 backend:
   replicaCount: 10
-  image:
-    repository: streamvault/backend
-    pullPolicy: IfNotPresent
   resources:
     requests:
       memory: "1Gi"
@@ -1050,77 +1040,396 @@ backend:
       path: /actuator/health/liveness
       port: 8080
     initialDelaySeconds: 30
-    periodSeconds: 10
   readinessProbe:
     httpGet:
       path: /actuator/health/readiness
       port: 8080
     initialDelaySeconds: 20
-    periodSeconds: 5
-
-frontend:
-  replicaCount: 5
-  image:
-    repository: streamvault/frontend
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
-
-ingress:
-  enabled: true
-  className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "50g"
-    nginx.ingress.kubernetes.io/use-regex: "true"
-  hosts:
-    - host: api.streamvault.com
-      paths:
-        - path: /api
-          pathType: Prefix
-    - host: streamvault.com
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: streamvault-tls
-      hosts: [streamvault.com, api.streamvault.com]
 ```
 
 ---
 
-## 📊 Dynatrace Monitoring
+## 🆘 Disaster Recovery
+
+### DR Architecture
+
+StreamVault implements a **Warm Standby** DR strategy across **two Azure regions** (Primary: East US, DR: West Europe), with automated failover via Azure Traffic Manager and Azure Front Door.
+
+```
+PRIMARY REGION (East US — Active)
+┌────────────────────────────────────────────────────────┐
+│  AKS (aks-streamvault-prod)                            │
+│  PostgreSQL Flexible (Business Critical, 32 vCores)    │
+│  Redis Premium P3                                      │
+│  Azure Blob (Hot tier — video assets)                  │
+│  Azure CDN origin                                      │
+└────────────────────┬───────────────────────────────────┘
+                     │  Continuous Replication
+                     │  ├── PostgreSQL geo-redundant backup + read replica
+                     │  ├── Redis active geo-replication
+                     │  └── Blob Storage GRS (Geo-Redundant Storage)
+                     ▼
+DR REGION (West Europe — Warm Standby)
+┌────────────────────────────────────────────────────────┐
+│  AKS (aks-streamvault-dr) — scaled to 50% capacity    │
+│  PostgreSQL Flexible (replica — promoted on failover)  │
+│  Redis Premium P3 (geo-replica)                        │
+│  Azure Blob (GRS replica — auto-synced)                │
+│  Azure CDN origin (secondary)                          │
+└────────────────────────────────────────────────────────┘
+                     │
+          Azure Front Door
+     (health probes every 30 sec)
+     → auto-reroutes on primary failure
+```
+
+### DR Infra Setup
+
+```hcl
+# infrastructure/environments/dr/main.tf
+
+module "dr_networking" {
+  source              = "../../modules/networking"
+  location            = "westeurope"
+  vnet_address_space  = ["10.10.0.0/8"]
+  environment         = "dr"
+}
+
+module "dr_aks" {
+  source         = "../../modules/aks"
+  location       = "westeurope"
+  cluster_name   = "aks-streamvault-dr"
+  node_count_min = 10
+  node_count_max = 80
+  vm_sku         = "Standard_D8s_v3"
+  environment    = "dr"
+}
+
+module "dr_database" {
+  source            = "../../modules/database"
+  location          = "westeurope"
+  sku               = "BusinessCritical_Standard_D32ds_v4"
+  ha_mode           = "ZoneRedundant"
+  geo_backup        = true
+  primary_server_id = module.prod_database.server_id   # geo-replica
+  environment       = "dr"
+}
+
+module "dr_redis" {
+  source              = "../../modules/cache"
+  location            = "westeurope"
+  sku                 = "Premium"
+  capacity            = 3
+  geo_replication     = true
+  primary_cache_id    = module.prod_redis.cache_id
+  environment         = "dr"
+}
+
+module "dr_storage" {
+  source              = "../../modules/storage"
+  location            = "westeurope"
+  replication_type    = "GRS"    # Geo-Redundant Storage
+  environment         = "dr"
+}
+```
+
+### DR Strategy — RTO & RPO Targets
+
+| Tier | Scenario | RTO Target | RPO Target | Strategy |
+|---|---|---|---|---|
+| **Tier 1** | AZ failure (zone-down) | < 2 min | 0 (zero data loss) | Zone-redundant AKS + PostgreSQL ZoneRedundant HA |
+| **Tier 2** | Region outage | < 15 min | < 5 min | Warm standby DR region + automated failover |
+| **Tier 3** | Data corruption / ransomware | < 4 hours | < 1 hour | PITR (Point-in-Time Restore) + geo backups |
+| **Tier 4** | Full region + DR region failure | < 24 hours | < 6 hours | Backup restore from GRS storage |
+
+### Automated Failover Flow
+
+```
+Azure Front Door Health Probe detects primary unhealthy (3 consecutive failures)
+    │
+    ▼
+Azure Traffic Manager switches DNS → DR endpoint (TTL: 30 sec)
+    │
+    ▼
+DR AKS cluster auto-scales from 50% → 100% capacity (KEDA + HPA triggers)
+    │
+    ▼
+DR PostgreSQL replica promoted to primary (< 60 sec)
+    │
+    ▼
+DR Redis geo-replica activated as primary
+    │
+    ▼
+PagerDuty alert → On-call engineer notified
+    │
+    ▼
+Dynatrace DR dashboard activated (separate monitoring workspace)
+    │
+    ▼
+Incident response runbook: docs/runbooks/dr-failover.md
+```
+
+### DR Runbook Commands
+
+```bash
+# Manual DR failover (when automated failover doesn't trigger)
+./scripts/dr-failover.sh --target westeurope --mode full
+
+# Promote PostgreSQL DR replica
+az postgres flexible-server replica promote \
+  --resource-group rg-streamvault-dr \
+  --name psql-streamvault-dr
+
+# Scale DR AKS to full capacity
+kubectl scale deployment --all --replicas=10 --namespace=dr-production
+
+# Verify DR health
+./scripts/dr-health-check.sh --env dr
+
+# Failback to primary (after primary recovery)
+./scripts/dr-failback.sh --confirm
+```
+
+### DR Drills Schedule
+
+| Drill Type | Frequency | Duration | Owned By |
+|---|---|---|---|
+| Tabletop exercise | Monthly | 2 hours | DevOps Lead + Architects |
+| Failover drill (simulated) | Quarterly | 4 hours | DevOps Team |
+| Full DR cutover test | Bi-annually | 8 hours | All Engineering Teams |
+| Chaos Engineering (AZ kill) | Monthly | 1 hour | SRE Team |
+| Data restore test | Monthly | 2 hours | DBA + DevOps |
+
+---
+
+## 📈 Scalability
+
+### Horizontal Pod Autoscaling (HPA)
+
+StreamVault is designed to scale from 100 to 10 million concurrent viewers using a combination of **HPA, KEDA event-driven autoscaling, Azure VMSS node autoscaling, and CDN offloading**.
+
+```yaml
+# hpa.yaml — Backend services
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: streamvault-backend-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: streamvault-backend
+  minReplicas: 10
+  maxReplicas: 100
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 65
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+    - type: External
+      external:
+        metric:
+          name: azure_servicebus_active_messages
+          selector:
+            matchLabels:
+              queue: watch-events
+        target:
+          type: AverageValue
+          averageValue: "1000"
+```
+
+### KEDA — Event-Driven Scaling (Azure Functions)
+
+```yaml
+# KEDA ScaledObject for watch-event processor
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: watch-event-scaler
+spec:
+  scaleTargetRef:
+    name: watch-event-function
+  minReplicaCount: 2
+  maxReplicaCount: 50
+  triggers:
+    - type: azure-servicebus
+      metadata:
+        queueName: watch-events
+        messageCount: "100"
+        connectionFromEnv: SERVICE_BUS_CONNECTION_STRING
+```
+
+### AKS Cluster Autoscaler
+
+```json
+{
+  "nodePoolProfiles": [
+    {
+      "name": "backend",
+      "minCount": 5,
+      "maxCount": 50,
+      "enableAutoScaling": true,
+      "scaleDownDelayAfterAdd": "10m",
+      "scaleDownUnneededTime": "5m"
+    }
+  ]
+}
+```
+
+### Scalability Design Principles
+
+| Concern | Solution |
+|---|---|
+| **Video delivery at scale** | Azure CDN edge caching — 95%+ of video traffic never hits origin |
+| **Database connection overload** | PgBouncer (5,000 client conn → 100 pool) + Read replicas for analytics |
+| **Session management** | Redis cluster (no sticky sessions, stateless JWT) |
+| **API rate limiting** | Azure APIM — 1,000 req/min per user, 10,000 req/min per IP |
+| **Message queue backpressure** | Azure Service Bus + KEDA auto-scaling consumers |
+| **DNS / Global routing** | Azure Front Door Anycast — routes to nearest healthy region |
+| **Stream token issuance** | Azure Functions — 50 instances, stateless, event-driven |
+| **Catalog search at scale** | PostgreSQL full-text search (GIN index) + Redis cache on hot queries |
+
+---
+
+## 🛡 Fault Tolerance
+
+### Multi-Layer Resilience Design
+
+```
+Layer 1 — Network:     Azure Front Door (WAF, DDoS, global failover)
+Layer 2 — Ingress:     NGINX Ingress with circuit breaker + rate limiting
+Layer 3 — Application: Spring Boot Resilience4j (circuit breaker, retry, bulkhead)
+Layer 4 — Messaging:   Azure Service Bus dead-letter queues + retry policies
+Layer 5 — Data:        PostgreSQL HA (Zone Redundant) + read replicas
+Layer 6 — Cache:       Redis clustering + geo-replication
+Layer 7 — CDN:         Multi-origin Azure Front Door with automatic failover
+```
+
+### Spring Boot Resilience4j Configuration
+
+```java
+// Circuit Breaker — Video Service
+@CircuitBreaker(name = "videoService", fallbackMethod = "videoServiceFallback")
+@Retry(name = "videoService")
+@Bulkhead(name = "videoService")
+public VideoMetadata getVideoMetadata(UUID videoId) {
+    return videoServiceClient.getMetadata(videoId);
+}
+
+// Fallback — serve cached data
+public VideoMetadata videoServiceFallback(UUID videoId, Exception e) {
+    return redisCache.get("video:meta:" + videoId)
+        .orElse(VideoMetadata.placeholder());
+}
+```
+
+```yaml
+# application.yml — Resilience4j config
+resilience4j:
+  circuitbreaker:
+    instances:
+      videoService:
+        slidingWindowSize: 20
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 5
+  retry:
+    instances:
+      videoService:
+        maxAttempts: 3
+        waitDuration: 500ms
+        exponentialBackoffMultiplier: 2
+  bulkhead:
+    instances:
+      videoService:
+        maxConcurrentCalls: 200
+        maxWaitDuration: 1s
+```
+
+### Kubernetes Fault Tolerance Settings
+
+```yaml
+# Pod Disruption Budget — never take down more than 50%
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: streamvault-backend-pdb
+spec:
+  minAvailable: 5    # Always keep at least 5 pods running
+  selector:
+    matchLabels:
+      app: streamvault-backend
+---
+# Topology Spread — spread pods across zones
+spec:
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app: streamvault-backend
+```
+
+### Database Fault Tolerance
+
+```
+PostgreSQL HA Setup (Zone Redundant):
+├── Primary (Zone 1)     — read/write
+├── Standby (Zone 2)     — hot standby, automatic failover < 120s
+└── Read Replica (Zone 3) — analytics read traffic offloading
+
+Failover trigger: Primary unavailable for > 30 seconds
+Automated promotion: Standby → Primary (no manual intervention)
+Connection string: uses Azure FQDN (auto-routes post-failover)
+```
+
+---
+
+## 📊 Monitoring & Observability
+
+### Monitoring Coverage — All Environments
+
+| Environment | Dynatrace Tier | Log Retention | Alerting | Dashboard |
+|---|---|---|---|---|
+| **DEV** | Infrastructure Monitoring | 7 days | Slack only | Dev dashboard |
+| **UAT** | Full Stack Monitoring | 14 days | Slack + Email | UAT dashboard |
+| **STAGING** | Full Stack + RUM | 30 days | PagerDuty (P3) | Staging dashboard |
+| **PRODUCTION** | Full Stack + RUM + BizEvents | 90 days | PagerDuty (P0–P2) | Production NOC |
+| **DR** | Full Stack Monitoring | 30 days | PagerDuty (P1) | DR dashboard |
 
 ### What is Monitored
 
 | Category | Metrics |
-|---------|---------|
-| **Application Performance** | Response time, error rate, throughput per service |
-| **Streaming Quality** | Buffering ratio, bitrate switches, startup time |
-| **Infrastructure** | AKS node CPU/memory, pod restarts, PVC usage |
-| **Database** | Query latency, connection pool saturation, deadlocks |
-| **User Experience** | Real User Monitoring (RUM), Apdex score |
+|---|---|
+| **Application Performance** | Response time (p50/p95/p99), error rate, throughput per service |
+| **Streaming Quality** | Buffering ratio, bitrate switches, startup latency, stall events |
+| **Infrastructure** | AKS node CPU/memory, pod restarts, PVC usage, network I/O |
+| **Database** | Query latency, connection pool saturation, deadlocks, replication lag |
+| **User Experience** | Real User Monitoring (RUM), Apdex score, Web Vitals (LCP/FID/CLS) |
 | **Business KPIs** | Active viewers, concurrent streams, subscription conversions |
+| **Security** | Failed auth attempts, WAF blocks, anomalous traffic patterns |
+| **DR Health** | Replication lag, DR pod readiness, failover readiness score |
 
-### Dynatrace OneAgent Helm Deployment
+### Dynatrace OneAgent Deployment
 
 ```yaml
 # charts/dynatrace/values.yaml
 oneAgent:
   apiUrl: https://ENVIRONMENT_ID.live.dynatrace.com/api
-  apiToken: $(DYNATRACE_API_TOKEN)   # from Key Vault
+  apiToken: $(DYNATRACE_API_TOKEN)
   hostGroup: streamvault-production
   networkZone: azure-eastus
 
-operator:
-  image: public.ecr.aws/dynatrace/dynatrace-operator
-
 dynakube:
-  apiUrl: https://ENVIRONMENT_ID.live.dynatrace.com/api
-  tokens: dynatrace-tokens
   oneAgent:
     classicFullStack:
       tolerations:
@@ -1131,7 +1440,7 @@ dynakube:
 ### Alerting Rules
 
 ```yaml
-# Dynatrace Alerting Profile: Critical
+# Production Alerting Profile
 alerts:
   - name: "Streaming Error Rate > 1%"
     condition: error_rate > 1%
@@ -1143,6 +1452,7 @@ alerts:
     condition: response_time_p99 > 500ms
     window: 3m
     severity: HIGH
+    notify: [pagerduty]
 
   - name: "Concurrent Viewers Drop > 20%"
     condition: active_streams_delta < -20%
@@ -1154,14 +1464,28 @@ alerts:
     condition: pod_restarts > 3
     window: 10m
     severity: HIGH
+    notify: [teams-channel]
 
   - name: "Database Connection Pool > 90%"
     condition: db_pool_utilization > 90%
     window: 2m
     severity: CRITICAL
+    notify: [pagerduty]
+
+  - name: "DR Replication Lag > 30s"
+    condition: dr_replication_lag_seconds > 30
+    window: 5m
+    severity: HIGH
+    notify: [pagerduty, dr-team-channel]
+
+  - name: "Redis Memory > 85%"
+    condition: redis_memory_usage_pct > 85
+    window: 5m
+    severity: HIGH
+    notify: [teams-channel]
 ```
 
-### Spring Boot + Dynatrace Integration
+### Spring Boot Metrics Export to Dynatrace
 
 ```yaml
 # application.yml
@@ -1184,6 +1508,263 @@ management:
       environment: ${SPRING_PROFILES_ACTIVE}
 ```
 
+### Log Aggregation Stack
+
+```
+Application Logs (JSON structured)
+    │
+    ▼ Fluentd DaemonSet (AKS)
+    │
+    ├── Azure Log Analytics Workspace (all envs)
+    │     ├── KQL queries for dashboards
+    │     └── Log-based alerts
+    │
+    └── Dynatrace Log Management
+          └── AI-powered anomaly detection (Davis AI)
+```
+
+---
+
+## 🧪 Testing Strategy
+
+StreamVault enforces a **comprehensive, multi-layer testing strategy** across all environments, covering unit, integration, contract, security, performance, NFT, and regression testing. All test reports are published as pipeline artifacts and gated in CI.
+
+### Testing Pyramid
+
+```
+                    ┌─────────────────┐
+                    │   E2E / UAT     │  ← Playwright / Cypress
+                    │  (Staging/UAT)  │
+                  ┌─┴─────────────────┴─┐
+                  │  Integration Tests   │  ← Testcontainers
+                  │     (DEV/CI)        │
+                ┌─┴─────────────────────┴─┐
+                │      Unit Tests          │  ← JUnit 5 / Jest
+                │      (All Envs / CI)     │
+              ┌─┴─────────────────────────┴─┐
+              │   Contract Tests (CDC)       │  ← Spring Cloud Contract
+              └───────────────────────────────┘
+```
+
+### Test Types & Coverage
+
+#### 1. Unit Tests
+- **Backend:** JUnit 5 + Mockito — all service & repository layers
+- **Frontend:** Jest + Angular Testing Library — all components & services
+- **Coverage Gate:** ≥ 80% line coverage enforced in CI (fail build if below)
+- **Reports:** JUnit XML + Jacoco HTML → published as pipeline artifacts
+
+#### 2. Integration Tests
+```bash
+# Testcontainers — spins up real PostgreSQL + Redis for integration tests
+mvn verify -Pintegration-tests
+```
+- Full Spring context loaded
+- Real PostgreSQL 15 container (matches production version)
+- Real Redis container
+- Tests cover: repository, service-to-DB, service-to-cache interactions
+
+#### 3. Contract Tests (Consumer-Driven Contracts)
+```bash
+# Spring Cloud Contract — prevents breaking API changes
+mvn verify -Pcontract-tests
+```
+- Provider-side: Spring Boot publishes contracts to Pact Broker
+- Consumer-side: Angular + downstream services verify contracts
+- Blocks merge if any consumer contract is broken
+
+#### 4. SAST — Static Application Security Testing
+
+| Tool | Scope | Gate |
+|---|---|---|
+| **SonarQube** | Code quality, bugs, vulnerabilities, code smells | Quality Gate must pass (0 new Critical/Blocker) |
+| **OWASP Dependency Check** | Known CVEs in Maven + npm dependencies | Fail on CVSS ≥ 7.0 |
+| **Snyk** | Container + dependency vulnerabilities | Fail on Critical |
+| **Checkmarx** | Deep SAST for OWASP Top 10 | Fail on High+ |
+
+```bash
+# SonarQube analysis
+mvn verify sonar:sonar \
+  -Dsonar.projectKey=streamvault-backend \
+  -Dsonar.host.url=${SONAR_URL} \
+  -Dsonar.login=${SONAR_TOKEN}
+
+# Publish Sonar report
+# Reports: sonar-report.html → pipeline artifacts
+```
+
+#### 5. DAST — Dynamic Application Security Testing
+
+```bash
+# OWASP ZAP — automated DAST scan against running endpoints
+docker run -t owasp/zap2docker-stable \
+  zap-full-scan.py \
+  -t https://uat.streamvault.com \
+  -r zap_report.html \
+  -w zap_report.md \
+  --hook=/zap/auth_hook.py   # handles JWT auth
+
+# DAST runs against: DEV (every build), UAT (every deploy), STAGING (every deploy)
+# Reports published: zap_report.html → pipeline artifacts + email to security team
+```
+
+#### 6. Performance Testing
+
+| Test | Tool | Environment | Trigger | Threshold |
+|---|---|---|---|---|
+| **Smoke** | k6 | DEV (every build) | Auto on CI | < 200ms p95, 0% errors |
+| **Load** | k6 | STAGING | Pre-production deploy | < 500ms p99, < 0.1% errors at 5,000 VUs |
+| **Stress** | k6 | STAGING | Monthly | System recovers gracefully at 150% load |
+| **Soak** | k6 | STAGING | Before major release | No memory leaks over 4-hour run |
+| **Spike** | k6 | STAGING | Quarterly | Handles 10x sudden traffic spike |
+
+```javascript
+// k6 load test — scripts/load-test.js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '5m',  target: 1000  },  // ramp-up
+    { duration: '20m', target: 5000  },  // sustained load
+    { duration: '5m',  target: 10000 },  // peak
+    { duration: '5m',  target: 0     },  // ramp-down
+  ],
+  thresholds: {
+    http_req_duration: ['p(99)<500'],   // 99th percentile < 500ms
+    http_req_failed:   ['rate<0.001'],  // error rate < 0.1%
+  },
+};
+
+export default function () {
+  const res = http.get('https://staging.streamvault.com/api/v1/videos', {
+    headers: { Authorization: `Bearer ${__ENV.TEST_TOKEN}` },
+  });
+  check(res, {
+    'status is 200':     (r) => r.status === 200,
+    'response < 500ms':  (r) => r.timings.duration < 500,
+  });
+  sleep(1);
+}
+```
+
+#### 7. NFT — Non-Functional Testing
+
+NFT verifies that the platform meets **SLA and NFR targets** before any production deploy.
+
+| NFR | Target | Test Method | Environment |
+|---|---|---|---|
+| **API Throughput** | ≥ 50,000 req/sec | k6 ramp test | STAGING |
+| **API Latency p99** | < 500ms | k6 + Dynatrace | STAGING/PROD |
+| **Video Startup Time** | < 3 seconds | Synthetic monitoring | UAT/STAGING/PROD |
+| **Buffering Ratio** | < 0.5% | Real User Monitoring | PROD |
+| **Availability** | ≥ 99.95% | Azure Monitor uptime | PROD |
+| **Max Concurrent Streams** | 10 million | Capacity model + load test | STAGING |
+| **DB Query p95** | < 100ms | pg_stat_statements | All envs |
+| **Memory Leak** | 0 after 4hr soak | JVM heap + k6 soak | STAGING |
+| **Pod Restart Rate** | 0 in 24hr window | Kubernetes metrics | All envs |
+| **CDN Cache Hit Rate** | ≥ 90% | Azure Front Door metrics | PROD |
+
+```bash
+# NFT reporting
+./scripts/nft-report.sh \
+  --env staging \
+  --duration 4h \
+  --report-format html \
+  --output nft-report.html
+
+# Published to pipeline artifacts and Confluence
+```
+
+#### 8. Regression Testing
+
+```bash
+# Full regression suite — runs on every UAT and STAGING deploy
+npx playwright test \
+  --config=playwright.config.ts \
+  --project=regression \
+  --reporter=html
+
+# Regression scope covers:
+# - All critical user journeys (sign-in, browse, stream, subscribe)
+# - All API endpoints (contract + response validation)
+# - Cross-browser: Chrome, Firefox, Safari, Edge
+# - Mobile viewports: iOS Safari, Android Chrome
+# - Reports: playwright-report/ → pipeline artifacts + Slack notification
+```
+
+### Test Reports & Artifacts
+
+All test reports are published as **Azure DevOps pipeline artifacts** and retained for 30 days:
+
+| Report | File | Published When |
+|---|---|---|
+| Unit test results | `junit-results.xml` | Every build |
+| Code coverage | `jacoco/index.html` | Every build |
+| SonarQube report | `sonar-report.html` | Every build |
+| OWASP ZAP DAST | `zap_report.html` | Every env deploy |
+| Trivy container scan | `trivy-report.json` | Every build |
+| k6 performance | `k6-results.html` | Staging deploy |
+| NFT report | `nft-report.html` | Staging + major releases |
+| Playwright regression | `playwright-report/index.html` | UAT + Staging deploy |
+
+---
+
+## ⚡ App Availability & SLA
+
+### Availability Targets
+
+| Environment | Availability SLA | Measurement Window | Max Downtime/Month |
+|---|---|---|---|
+| **PRODUCTION** | 99.95% | Monthly | 21.9 minutes |
+| **DR** | 99.9% | Monthly | 43.8 minutes |
+| **STAGING** | 99.5% | Monthly | 3.65 hours |
+| **UAT** | 99.0% | Monthly | 7.3 hours |
+| **DEV** | Best effort | — | — |
+
+### Availability Architecture
+
+```
+99.95% Production Availability achieved via:
+
+├── Azure Front Door (99.99% SLA) — global anycast, multi-region
+├── AKS Zone-Redundant (3 AZs) — no single AZ failure brings down service
+├── PostgreSQL Zone-Redundant HA — automatic failover < 120 sec
+├── Redis Geo-Replication — zero data loss on zone failure
+├── PodDisruptionBudget — rolling updates never kill more than 50% pods
+├── Health checks (liveness + readiness probes) — auto pod replacement
+├── Blue-Green + Canary — zero-downtime deployments
+└── DR warm standby — RTO 15 min for full region outage
+```
+
+### Health Check Endpoints
+
+```
+GET /actuator/health/liveness   → JVM alive? (restart if fails)
+GET /actuator/health/readiness  → Dependencies ready? (remove from LB if fails)
+GET /actuator/health            → Full health (DB, Redis, Storage, downstream)
+GET /actuator/info              → Version, build info, environment
+```
+
+### SLO Dashboard (Dynatrace)
+
+| SLO | Target | Measurement |
+|---|---|---|
+| API Availability | 99.95% | Synthetic + RUM |
+| API Latency p99 | < 500ms | Dynatrace APM |
+| Streaming Availability | 99.95% | Synthetic checks every 60s |
+| Video Startup Time | < 3s | RUM — client-side metric |
+| Error Budget (monthly) | 21.9 min | Burn rate alert at 50% consumed |
+
+### Incident Response SLA
+
+| Severity | Condition | Response Time | Resolution Time | Channel |
+|---|---|---|---|---|
+| **P0** | Service completely down | 15 min | 1 hour | PagerDuty → On-call |
+| **P1** | Major feature degraded (>20% users affected) | 30 min | 4 hours | PagerDuty → Team Lead |
+| **P2** | Minor degradation / single region | 2 hours | 8 hours | Teams #incidents |
+| **P3** | Enhancement / cosmetic | Next sprint | Next sprint | JIRA board |
+
 ---
 
 ## 📁 Project Structure
@@ -1202,42 +1783,24 @@ streamvault/
 │   │   └── openapi.yaml
 │   └── runbooks/
 │       ├── incident-response.md
+│       ├── dr-failover.md
 │       └── on-call.md
 │
-├── frontend/                          # Angular Application
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── core/
-│   │   │   │   ├── auth/              # MSAL, guards, interceptors
-│   │   │   │   ├── services/
-│   │   │   │   └── interceptors/      # JWT, error, retry
-│   │   │   ├── features/
-│   │   │   │   ├── video-player/      # HLS.js player component
-│   │   │   │   ├── catalog/           # Browse & search
-│   │   │   │   ├── dashboard/         # User dashboard
-│   │   │   │   └── admin/             # Admin panel
-│   │   │   └── shared/
-│   │   ├── environments/
-│   │   │   ├── environment.ts
-│   │   │   ├── environment.staging.ts
-│   │   │   └── environment.prod.ts
-│   │   └── assets/
+├── frontend/                          # Angular 17+ Application
+│   ├── src/app/
+│   │   ├── core/
+│   │   │   ├── auth/                  # MSAL, guards, interceptors
+│   │   │   └── interceptors/          # JWT, error, retry
+│   │   ├── features/
+│   │   │   ├── video-player/          # HLS.js player
+│   │   │   ├── catalog/               # Browse & search
+│   │   │   └── admin/                 # Admin panel
+│   │   └── shared/
 │   ├── Dockerfile
-│   ├── nginx.conf
 │   └── package.json
 │
 ├── backend/                           # Spring Boot Microservices
 │   ├── user-service/
-│   │   ├── src/main/java/com/streamvault/user/
-│   │   │   ├── controller/
-│   │   │   ├── service/
-│   │   │   ├── repository/
-│   │   │   ├── domain/
-│   │   │   ├── config/
-│   │   │   └── security/
-│   │   ├── src/test/
-│   │   ├── Dockerfile
-│   │   └── pom.xml
 │   ├── video-service/
 │   ├── streaming-service/
 │   ├── analytics-service/
@@ -1253,21 +1816,24 @@ streamvault/
 ├── infrastructure/                    # Terraform IaC
 │   ├── environments/
 │   │   ├── dev/
+│   │   ├── uat/
 │   │   ├── staging/
-│   │   └── production/
+│   │   ├── production/
+│   │   └── dr/
 │   └── modules/
-│       ├── networking/
-│       ├── aks/
-│       ├── database/
-│       ├── cache/
-│       └── security/
 │
 ├── charts/                            # Helm Charts
 │   └── streamvault/
+│       ├── values-dev.yaml
+│       ├── values-uat.yaml
+│       ├── values-staging.yaml
+│       ├── values-prod.yaml
+│       └── values-dr.yaml
 │
-├── gitops/                            # ArgoCD GitOps Repo
+├── gitops/                            # ArgoCD GitOps
 │   ├── applications/
 │   └── environments/
+│       ├── dev/ uat/ staging/ production/ dr/
 │
 ├── pipelines/                         # Azure DevOps Pipelines
 │   ├── azure-pipelines.yml
@@ -1275,14 +1841,20 @@ streamvault/
 │   └── templates/
 │       ├── build-backend.yml
 │       ├── build-frontend.yml
+│       ├── security-scan.yml
 │       ├── test.yml
+│       ├── performance-test.yml
 │       └── deploy.yml
 │
 └── scripts/
     ├── blue-green-switch.sh
+    ├── dr-failover.sh
+    ├── dr-failback.sh
+    ├── dr-health-check.sh
     ├── smoke-test.sh
+    ├── nft-report.sh
     ├── db-migration.sh
-    └── load-test.sh
+    └── load-test.js
 ```
 
 ---
@@ -1292,7 +1864,6 @@ streamvault/
 ### Prerequisites
 
 ```bash
-# Required tools
 az --version          # Azure CLI 2.55+
 kubectl version       # 1.28+
 helm version          # 3.13+
@@ -1300,6 +1871,7 @@ java --version        # Java 21
 node --version        # Node 20+
 terraform --version   # 1.6+
 argocd version        # 2.9+
+k6 version            # 0.47+
 ```
 
 ### 1. Clone & Setup
@@ -1312,7 +1884,7 @@ cd streamvault
 az login
 az account set --subscription "StreamVault-Dev"
 
-# Connect to AKS
+# Connect to AKS (dev)
 az aks get-credentials \
   --resource-group rg-streamvault-dev \
   --name aks-streamvault-dev
@@ -1321,33 +1893,41 @@ az aks get-credentials \
 ### 2. Provision Infrastructure
 
 ```bash
+# Dev environment
 cd infrastructure/environments/dev
 terraform init
 terraform plan -out=tfplan
 terraform apply tfplan
+
+# DR environment (separate subscription)
+cd infrastructure/environments/dr
+az account set --subscription "StreamVault-DR-Sub"
+terraform init
+terraform plan -out=tfplan-dr
+terraform apply tfplan-dr
 ```
 
-### 3. Deploy via Helm (Dev)
+### 3. Deploy via Helm
 
 ```bash
-# Install/upgrade backend
+# Install backend (dev)
 helm upgrade --install streamvault-backend ./charts/streamvault \
   --namespace development \
   --create-namespace \
   --values charts/streamvault/values-dev.yaml \
   --set backend.image.tag=$(git rev-parse --short HEAD)
 
-# Install/upgrade frontend
-helm upgrade --install streamvault-frontend ./charts/streamvault \
-  --namespace development \
-  --values charts/streamvault/values-dev.yaml \
-  --set frontend.image.tag=$(git rev-parse --short HEAD)
+# Install backend (UAT)
+helm upgrade --install streamvault-backend ./charts/streamvault \
+  --namespace uat \
+  --values charts/streamvault/values-uat.yaml \
+  --set backend.image.tag=$(git rev-parse --short HEAD)
 ```
 
 ### 4. Run Locally
 
 ```bash
-# Backend (user-service example)
+# Backend
 cd backend/user-service
 export SPRING_PROFILES_ACTIVE=local
 export AZURE_KEYVAULT_URI=https://streamvault-dev-kv.vault.azure.net/
@@ -1362,41 +1942,46 @@ ng serve --proxy-config proxy.conf.json
 ### 5. Run Tests
 
 ```bash
-# Backend unit tests
+# Unit tests
 cd backend/user-service && mvn test
-
-# Backend integration tests (requires Docker)
-mvn verify -Pintegration-tests
-
-# Frontend unit tests
 cd frontend && npm test
+
+# Integration tests (requires Docker)
+mvn verify -Pintegration-tests
 
 # E2E tests
 cd frontend && npx playwright test
 
-# Load test (dev)
+# Performance / load test
 k6 run scripts/load-test.js --vus 100 --duration 60s
+
+# Security — SAST
+mvn verify sonar:sonar -Dsonar.login=${SONAR_TOKEN}
+
+# Security — Container scan
+trivy image streamvaultacr.azurecr.io/streamvault/backend:latest
 ```
 
 ---
 
 ## 🔧 Environment Variables
 
-All secrets are in **Azure Key Vault**. Non-secret config is in **Azure App Configuration**.
+> All secrets are stored in **Azure Key Vault**. Non-secret config in **Azure App Configuration**.
 
 | Variable | Source | Description |
-|----------|--------|-------------|
+|---|---|---|
 | `AZURE_KEYVAULT_URI` | Deploy config | Key Vault endpoint |
 | `AZURE_APP_CONFIG_CONNECTION_STRING` | Deploy config | App Configuration endpoint |
-| `SPRING_PROFILES_ACTIVE` | Deploy config | `dev`, `staging`, `prod` |
+| `SPRING_PROFILES_ACTIVE` | Deploy config | `dev`, `uat`, `staging`, `prod`, `dr` |
 | `postgres-connection-string` | Key Vault | PostgreSQL JDBC URL |
 | `redis-connection-string` | Key Vault | Redis connection string |
 | `aad-client-secret` | Key Vault | Azure AD B2C client secret |
 | `jwt-signing-key` | Key Vault | RS256 PEM private key |
 | `azure-storage-account-key` | Key Vault | Blob storage key |
 | `dynatrace-api-token` | Key Vault | Dynatrace API token |
+| `service-bus-connection-string` | Key Vault | Azure Service Bus key |
 
-> ⚠️ **Never commit secrets to Git.** All secrets are managed exclusively through Azure Key Vault. The managed identity on each pod is granted `Key Vault Secrets User` role at deployment time.
+> ⚠️ **Never commit secrets to Git.** Managed Identity on each pod is granted `Key Vault Secrets User` role at deployment time.
 
 ---
 
@@ -1404,14 +1989,17 @@ All secrets are in **Azure Key Vault**. Non-secret config is in **Azure App Conf
 
 OpenAPI 3.0 spec: `docs/api/openapi.yaml`
 
-Live docs available via Swagger UI:
-- Dev: `https://api-dev.streamvault.com/swagger-ui.html`
-- Staging: `https://api-staging.streamvault.com/swagger-ui.html`
+| Environment | Swagger UI |
+|---|---|
+| DEV | `https://api-dev.streamvault.internal/swagger-ui.html` |
+| UAT | `https://api-uat.streamvault.com/swagger-ui.html` |
+| STAGING | `https://api-staging.streamvault.com/swagger-ui.html` |
+| PRODUCTION | Internal only (APIM Developer Portal) |
 
 ### Core Endpoints
 
 | Method | Path | Auth | Description |
-|--------|------|------|-------------|
+|---|---|---|---|
 | `POST` | `/api/v1/auth/token` | None | Exchange SSO code for JWT |
 | `GET` | `/api/v1/videos` | Bearer | List/search video catalog |
 | `GET` | `/api/v1/videos/{id}` | Bearer | Get video metadata |
@@ -1438,45 +2026,47 @@ hotfix/*      ← Emergency production patches
 
 ### Pull Request Requirements
 
-- All checks must pass (CI pipeline)
-- Minimum 2 reviewer approvals
-- Code coverage must not drop below 80%
-- No new critical/high SonarQube findings
-- Security scan must pass (Trivy, Snyk)
-- PR description must reference a JIRA ticket
+- All CI checks must pass (build, test, security scan)
+- Minimum **2 reviewer approvals**
+- Code coverage must not drop below **80%**
+- No new Critical/High **SonarQube findings**
+- Security scan must pass (Trivy, Snyk, OWASP)
+- PR description must reference a **JIRA ticket**
+- DAST scan must produce no new High/Critical findings
 
 ### Commit Message Format
 
 ```
-type(scope): short description
-
 feat(streaming): add adaptive bitrate switching for 4K
 fix(auth): resolve token refresh race condition
 chore(deps): upgrade Spring Boot to 3.2.1
 docs(api): update OpenAPI spec for /stream endpoint
+test(video): add NFT test for concurrent streaming load
+infra(dr): add DR terraform module for West Europe region
 ```
-
----
-
-## 📝 License
-
-Proprietary — All rights reserved © 2025 StreamVault Inc.
 
 ---
 
 ## 📞 Support & On-Call
 
-| Severity | Response SLA | Channel |
-|----------|-------------|---------|
-| P0 — Service Down | 15 min | PagerDuty → On-call engineer |
-| P1 — Major Degradation | 30 min | PagerDuty → Team lead |
-| P2 — Minor Issue | 4 hours | Teams #incidents channel |
-| P3 — Enhancement | Next sprint | JIRA board |
+| Severity | Condition | Response SLA | Channel |
+|---|---|---|---|
+| **P0 — Service Down** | Production unavailable | 15 min | PagerDuty → On-call engineer |
+| **P1 — Major Degradation** | >20% users affected | 30 min | PagerDuty → Team Lead |
+| **P2 — Minor Issue** | Single feature degraded | 4 hours | Teams #incidents |
+| **P3 — Enhancement** | Non-urgent | Next sprint | JIRA board |
 
-**Runbooks:** `docs/runbooks/`
-**Status Page:** https://status.streamvault.com
-**On-Call Rotation:** PagerDuty — `streamvault-oncall` schedule
+- 📚 Runbooks: `docs/runbooks/`
+- 🌐 Status Page: `https://status.streamvault.com`
+- 📟 On-Call Rotation: PagerDuty — `streamvault-oncall` schedule
+- 🔥 DR Failover Runbook: `docs/runbooks/dr-failover.md`
 
 ---
 
-*Last updated: 2025 | Maintained by the StreamVault Platform Engineering Team*
+<div align="center">
+
+**Last updated: 2025 | Maintained by the StreamVault Platform Engineering Team**
+
+📝 Proprietary — All rights reserved © 2025 StreamVault Inc.
+
+</div>
