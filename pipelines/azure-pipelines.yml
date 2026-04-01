@@ -1,0 +1,43 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  dockerRegistryServiceConnection: 'docker-conn'
+  imageRepository: 'streamvault'
+  tag: '$(Build.BuildId)'
+
+stages:
+
+# 🔹 BUILD STAGE
+- stage: Build
+  jobs:
+    - template: templates/build-backend.yml
+    - template: templates/build-frontend.yml
+
+# 🔹 TEST STAGE
+- stage: Test
+  dependsOn: Build
+  jobs:
+    - template: templates/test.yml
+
+# 🔹 SECURITY SCAN
+- stage: Security
+  dependsOn: Test
+  jobs:
+    - template: templates/security-scan.yml
+
+# 🔹 PERFORMANCE TEST
+- stage: Performance
+  dependsOn: Security
+  jobs:
+    - template: templates/performance-test.yml
+
+# 🔹 DEPLOY
+- stage: Deploy
+  dependsOn: Performance
+  jobs:
+    - template: templates/deploy.yml
+      parameters:
+        environment: 'prod'

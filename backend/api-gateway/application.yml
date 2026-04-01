@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: http://user-service:8081
+          predicates:
+            - Path=/users/**
+
+        - id: video-service
+          uri: http://video-service:8082
+          predicates:
+            - Path=/videos/**
+
+        - id: streaming-service
+          uri: http://streaming-service:8083
+          predicates:
+            - Path=/stream/**
+
+        - id: analytics-service
+          uri: http://analytics-service:8084
+          predicates:
+            - Path=/analytics/**
+
+        - id: notification-service
+          uri: http://notification-service:8085
+          predicates:
+            - Path=/notify/**

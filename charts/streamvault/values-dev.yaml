@@ -1,0 +1,12 @@
+replicaCount: 1
+
+global:
+  tag: dev
+
+env:
+  SPRING_PROFILES_ACTIVE: dev
+
+resources:
+  limits:
+    cpu: "300m"
+    memory: "256Mi"

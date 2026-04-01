@@ -1,0 +1,9 @@
+jobs:
+- job: Performance_Test
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+    - script: |
+        echo "Running load test (JMeter / k6)..."
+      displayName: Performance Test

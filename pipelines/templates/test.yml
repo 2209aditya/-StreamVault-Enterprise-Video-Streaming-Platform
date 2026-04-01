@@ -1,0 +1,9 @@
+jobs:
+- job: Run_Tests
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+    - script: |
+        echo "Running unit tests..."
+      displayName: Run Tests

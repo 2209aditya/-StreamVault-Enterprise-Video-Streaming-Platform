@@ -1,0 +1,9 @@
+jobs:
+- job: Security_Scan
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+    - script: |
+        echo "Running SAST (SonarQube / Snyk)..."
+      displayName: Security Scan

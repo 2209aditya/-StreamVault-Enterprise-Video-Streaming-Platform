@@ -1,0 +1,24 @@
+jobs:
+- job: Build_Frontend
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+
+    - script: |
+        cd frontend
+        npm install
+        npm run build
+      displayName: Build Angular App
+
+    - task: Docker@2
+      inputs:
+        containerRegistry: $(dockerRegistryServiceConnection)
+        repository: $(imageRepository)/frontend
+        command: buildAndPush
+        Dockerfile: frontend/Dockerfile
+        tags: |
+          $(tag)

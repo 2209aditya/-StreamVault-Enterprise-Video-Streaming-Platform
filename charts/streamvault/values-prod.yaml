@@ -1,0 +1,17 @@
+replicaCount: 6
+
+global:
+  tag: prod
+
+env:
+  SPRING_PROFILES_ACTIVE: prod
+
+resources:
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+autoscaling:
+  enabled: true
+  minReplicas: 4
+  maxReplicas: 15

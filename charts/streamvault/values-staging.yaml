@@ -1,0 +1,7 @@
+replicaCount: 3
+
+global:
+  tag: staging
+
+env:
+  SPRING_PROFILES_ACTIVE: staging

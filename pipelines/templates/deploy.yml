@@ -1,0 +1,35 @@
+parameters:
+  environment: ''
+
+jobs:
+- deployment: Deploy_App
+  environment: ${{ parameters.environment }}
+
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+
+          - task: Kubernetes@1
+            displayName: Set Kube Context
+            inputs:
+              connectionType: 'Azure Resource Manager'
+              azureSubscription: 'azure-sub'
+              azureResourceGroup: 'streamvault-rg'
+              kubernetesCluster: 'streamvault-aks'
+              command: login
+
+          - task: HelmDeploy@0
+            displayName: Deploy via Helm
+            inputs:
+              connectionType: 'Azure Resource Manager'
+              azureSubscription: 'azure-sub'
+              azureResourceGroup: 'streamvault-rg'
+              kubernetesCluster: 'streamvault-aks'
+              command: upgrade
+              chartType: FilePath
+              chartPath: charts/streamvault
+              releaseName: streamvault
+              overrideValues: |
+                global.tag=$(tag)
+              valueFile: charts/streamvault/values-${{ parameters.environment }}.yaml

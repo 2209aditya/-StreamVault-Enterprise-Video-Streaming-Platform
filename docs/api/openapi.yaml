@@ -1,0 +1,32 @@
+openapi: 3.0.0
+info:
+  title: StreamVault API
+  version: 1.0.0
+
+paths:
+  /videos:
+    get:
+      summary: Get all videos
+      responses:
+        '200':
+          description: List of videos
+
+  /users:
+    post:
+      summary: Create user
+      requestBody:
+        required: true
+      responses:
+        '201':
+          description: User created
+
+  /stream/{videoId}:
+    get:
+      summary: Get stream URL
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Streaming URL

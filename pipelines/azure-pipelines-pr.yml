@@ -1,0 +1,13 @@
+trigger: none
+
+pr:
+  branches:
+    include:
+      - "*"
+
+stages:
+- stage: PR_Validation
+  jobs:
+    - template: templates/build-backend.yml
+    - template: templates/build-frontend.yml
+    - template: templates/test.yml
